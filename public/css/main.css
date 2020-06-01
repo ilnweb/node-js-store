@@ -19,8 +19,8 @@ form {
   display: inline;
 }
 
-img{
-  width: 20rem;
+.centered {
+  text-align: center;
 }
 
 .main-header {
@@ -59,10 +59,6 @@ img{
 .main-header__item a:active,
 .main-header__item a.active {
   color: #ffeb3b;
-}
-
-.centered{
-  text-align: center;
 }
 
 .mobile-nav {
