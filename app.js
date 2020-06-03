@@ -24,12 +24,12 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((req, res, next) => {
-	User.findByPk(1)
-		.then((user) => {
-			req.user = user;
-			next();
-		})
-		.catch((err) => console.log(err));
+  User.findByPk(1)
+    .then(user => {
+      req.user = user;
+      next();
+    })
+    .catch(err => console.log(err));
 });
 
 app.use('/admin', adminRoutes);
@@ -48,24 +48,25 @@ User.hasMany(Order);
 Order.belongsToMany(Product, { through: OrderItem });
 
 sequelize
-	.sync()
-	.then((result) => {
-		return User.findByPk(1);
-		// console.log(result);
-	})
-	.then((user) => {
-		if (!user) {
-			return User.create({ name: 'Max', email: 'test@test.com' });
-		}
-		return user;
-	})
-	.then((user) => {
-		// console.log(user);
-		return user.createCart();
-	})
-	.then((cart) => {
-		app.listen(4000);
-	})
-	.catch((err) => {
-		console.log(err);
-	});
+  // .sync({ force: true })
+  .sync()
+  .then(result => {
+    return User.findByPk(1);
+    // console.log(result);
+  })
+  .then(user => {
+    if (!user) {
+      return User.create({ name: 'Max', email: 'test@test.com' });
+    }
+    return user;
+  })
+  .then(user => {
+    // console.log(user);
+    return user.createCart();
+  })
+  .then(cart => {
+    app.listen(4000);
+  })
+  .catch(err => {
+    console.log(err);
+  });
