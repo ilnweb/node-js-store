@@ -63,7 +63,8 @@ module.exports = mongoose.model('Product', productSchema);
 // 				return products;
 // 			})
 // 			.catch((err) => console.log(err));
-// 	}
+//   }
+  
 // 	static findById(prodId) {
 // 		const db = getDB();
 // 		return db
