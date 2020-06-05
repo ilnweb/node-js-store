@@ -1,17 +1,40 @@
-const User = require('../models/user');
 const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer');
+const sendgridTransport = require('nodemailer-sendgrid-transport');
+const User = require('../models/user');
 
+const transporter = nodemailer.createTransport(
+	sendgridTransport({
+		auth: {
+			api_key: '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'
+		}
+	})
+);
 exports.getLogin = (req, res, next) => {
+	let message = req.flash('error');
+	if (message.length > 0) {
+		message = message[0];
+	} else {
+		message = null;
+	}
 	res.render('auth/login', {
 		path: '/login',
-		pageTitle: 'Login'
+		pageTitle: 'Login',
+		errorMessage: message
 	});
 };
 
 exports.getSignup = (req, res, next) => {
+	let message = req.flash('error');
+	if (message.length > 0) {
+		message = message[0];
+	} else {
+		message = null;
+	}
 	res.render('auth/signup', {
 		path: '/signup',
-		pageTitle: 'Signup'
+		pageTitle: 'Signup',
+		errorMessage: message
 	});
 };
 
@@ -21,6 +44,7 @@ exports.postLogin = (req, res, next) => {
 	User.findOne({ email: email })
 		.then((user) => {
 			if (!user) {
+				req.flash('error', 'Invalid email or password.');
 				return res.redirect('/login');
 			}
 			bcrypt
@@ -31,20 +55,16 @@ exports.postLogin = (req, res, next) => {
 						req.session.user = user;
 						return req.session.save((err) => {
 							console.log(err);
-						  res.redirect('/');
+							res.redirect('/');
 						});
 					}
+					req.flash('error', 'Invalid email or password.');
+					res.redirect('/login');
 				})
 				.catch((err) => {
 					console.log(err);
 					res.redirect('/login');
 				});
-			req.session.isLoggedIn = true;
-			req.session.user = user;
-			req.session.save((err) => {
-				console.log(err);
-				res.redirect('/');
-			});
 		})
 		.catch((err) => console.log(err));
 };
@@ -54,8 +74,9 @@ exports.postSignup = (req, res, next) => {
 	const password = req.body.password;
 	const confirmPassword = req.body.confirmPassword;
 	User.findOne({ email: email })
-		.then((userdoc) => {
-			if (userdoc) {
+		.then((userDoc) => {
+			if (userDoc) {
+				req.flash('error', 'This email is already in use.');
 				return res.redirect('/signup');
 			}
 			return bcrypt
@@ -69,10 +90,18 @@ exports.postSignup = (req, res, next) => {
 					return user.save();
 				})
 				.then((result) => {
-					res.redirect('/');
+					res.redirect('/login');
+					return transporter.sendMail({
+						to: email,
+						from: 'iliyan.tsachev@ilnweb.com',
+						subject: 'Regestration Completed',
+						html: '<h1>You successfully signed up</h1>'
+          })
 				});
 		})
-		.catch((err) => console.log(err));
+		.catch((err) => {
+			console.log(err);
+		});
 };
 
 exports.postLogout = (req, res, next) => {
