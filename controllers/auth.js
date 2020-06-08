@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const sendgridTransport = require('nodemailer-sendgrid-transport');
 const User = require('../models/user');
+const { validationResult } = require('express-validator/check');
 
 const transporter = nodemailer.createTransport(
 	sendgridTransport({
@@ -74,6 +75,14 @@ exports.postSignup = (req, res, next) => {
 	const email = req.body.email;
 	const password = req.body.password;
 	const confirmPassword = req.body.confirmPassword;
+	const errors = validationResult(req);
+	if (!errors.isEmpty()) {
+		return res.status(422).render('auth/signup', {
+			path: '/signup',
+			pageTitle: 'Signup',
+			errorMessage: errors.array()[0].msg
+		});
+	}
 	User.findOne({ email: email })
 		.then((userDoc) => {
 			if (userDoc) {
@@ -184,24 +193,24 @@ exports.getNewPassword = (req, res, next) => {
 exports.postNewPassword = (req, res, next) => {
 	const newPassword = req.body.password;
 	const userId = req.body.userId;
-  const passwordToken = req.body.passwordToken;
-  let resetUser;
+	const passwordToken = req.body.passwordToken;
+	let resetUser;
 
 	User.findOne({ resetToken: passwordToken, resetTokenExpiration: { $gt: Date.now() }, _id: userId })
-    .then((user) => {
-      resetUser = user;
-      return bcrypt.hash(newPassword, 12);
-    })
-    .then((hashedPassword) => {
-      resetUser.password = hashedPassword;
-      resetUser.resetToken = null;
-      resetUser.resetTokenExpiration = undefined;
-      resetUser.save();
-    })
-    .then((result) => {
-      res.redirect('/');
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+		.then((user) => {
+			resetUser = user;
+			return bcrypt.hash(newPassword, 12);
+		})
+		.then((hashedPassword) => {
+			resetUser.password = hashedPassword;
+			resetUser.resetToken = null;
+			resetUser.resetTokenExpiration = undefined;
+			resetUser.save();
+		})
+		.then((result) => {
+			res.redirect('/');
+		})
+		.catch((err) => {
+			console.log(err);
+		});
 };
